@@ -3,12 +3,12 @@ import pandas as pd
 import time
 from datetime import datetime
 
-# --- FILL IN YOUR CREDENTIALS --- #
+#API credentials
 CLIENT_ID = 'daMBf2Q5VDyixI_SM-_HHw'
 CLIENT_SECRET = 'k86Oe_WGGE9hSOMRVCmsg_EBu7FSug'
 USER_AGENT = 'LondonLTNSentiment by /u/DoubleEdge5528'
 
-# --- SETUP REDDIT API INSTANCE (READ-ONLY MODE) --- #
+
 print("Connecting to Reddit API...")
 reddit = praw.Reddit(
     client_id=CLIENT_ID,
@@ -17,7 +17,7 @@ reddit = praw.Reddit(
 )
 print(f"Connected! Read-only: {reddit.read_only}")
 
-# --- KEYWORDS TO SEARCH --- #
+#Keywords 
 keywords = [
     '"low traffic neighbourhood"',
     '"low-traffic neighbourhood"',
@@ -30,7 +30,7 @@ keywords = [
 
 subreddit = reddit.subreddit("london")
 results = []
-seen_posts = set()  # Track unique posts to avoid duplicates
+seen_posts = set()  #avoid duplicates
 
 # --- FUNCTION TO SEARCH POSTS --- #
 def search_ltn_posts(keyword):
@@ -39,8 +39,7 @@ def search_ltn_posts(keyword):
     comment_count = 0
     
     try:
-        # Search for posts (limit 70 per keyword = ~200 unique posts after duplicates)
-        for post in subreddit.search(keyword, limit=1500, sort='relevance', time_filter='all'):
+        for post in subreddit.search(keyword, limit=500, sort='relevance', time_filter='all'):
             # Skip if we've already processed this post
             if post.id in seen_posts:
                 continue
@@ -62,7 +61,6 @@ def search_ltn_posts(keyword):
                 "keyword_matched": keyword
             })
             
-            # Get top 4 comments per post (200 posts × 4 comments = 800 comments + 200 posts = 1000 total)
             try:
                 post.comments.replace_more(limit=0)
                 comments_added = 0
@@ -90,7 +88,6 @@ def search_ltn_posts(keyword):
     except Exception as e:
         print(f"  Error searching for '{keyword}': {e}")
 
-# --- MAIN SEARCH LOOP --- #
 for kw in keywords:
     search_ltn_posts(kw)
     time.sleep(2)  # Be nice to Reddit API
@@ -99,7 +96,7 @@ print(f"\n{'='*60}")
 print(f"Total collected: {len(results)} items ({len(seen_posts)} unique posts)")
 print(f"{'='*60}")
 
-# --- SAVE TO CSV --- #
+#Save to CSV
 if results:
     df = pd.DataFrame(results)
     df.to_csv("ltn_london_reddit.csv", index=False, encoding='utf-8')
